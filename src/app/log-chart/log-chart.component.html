@@ -1,58 +1,117 @@
-<div class="row">
-    <form (ngSubmit)="onSubmit(f)" #f="ngForm">
-        <div class="col-sm-8">
-            <div class="form-group">
-                <input type="text" class="form-control" [(ngModel)]="model.apiUrl" name="apiUrl" />
-            </div>
+<div class="form-group has-error">
+    <label class="control-label">{{errorMessage}}</label>
+</div>
+<nav class="navbar navbar-default visible-xs" [ngClass]="{'full-width': showMobileInput}">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed pull-left" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1" aria-expanded="false"
+                    (click)="showMobileInput = false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
         </div>
-        <div class="col-sm-2">
-            <div class="form-group">
-                <button class="btn btn-primary form-control">Get data</button>
-            </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li><a (click)="getData()">Get Data <span class="sr-only">(current)</span></a></li>
+                <li>
+                    <a (click)="showMobileInput =!showMobileInput">Set API URL</a>
+                    <div [ngClass]="{'hide': !showMobileInput}"><input type="text"
+                                                                       class="form-control"
+                                                                       [(ngModel)]="apiUrl"
+                                                                       name="apiUrl" /></div>
+                </li>
+                <li><a (click)="clearFilers()">Clear filters</a></li>
+            </ul>
+        </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+</nav>
+
+<div class="visible-xs mobile-filters">
+    <div class="pull-left">
+        <input [(ngModel)]="filterDateStart" ng2-datetime-picker
+               date-format="DD-MM-YYYY hh:mm"
+               hour="23"
+               minute='59'
+               close-on-select="false"
+               class="form-control"
+               placeholder="Start"
+               (ngModelChange)="filterResults()" />
+    </div>
+    <div class="pull-right">
+        <input [(ngModel)]="filterDateEnd" ng2-datetime-picker
+               date-format="DD-MM-YYYY hh:mm"
+               hour="23"
+               minute='59'
+               close-on-select="false"
+               class="form-control"
+               placeholder="End"
+               (ngModelChange)="filterResults()" />
+    </div>
+</div>
+
+<div class="row hidden-xs">
+    <div class="col-sm-8">
+        <div class="form-group">
+            <input type="text" class="form-control" [(ngModel)]="apiUrl" name="apiUrl" />
         </div>
-        <div class="col-sm-1">
-            <div class="loading" [ngClass]="{'hide': !showSpinner}"></div>
+    </div>
+    <div class="col-sm-2">
+        <div class="form-group">
+            <button class="btn btn-primary form-control" (click)="getData()">Get data</button>
         </div>
-    </form>
+    </div>
+    <div class="col-sm-1">
+        <div class="loading" [ngClass]="{'hide': !showSpinner}"></div>
+    </div>
 </div>
 <div class="row">
     <div class="col-sm-8">
         <chart [options]="options"></chart>
     </div>
     <div class="col-sm-4 col-xs-12">
-        <h3>Select Date/Time Range</h3>
-        <div class="row">
+        <h3 class="hidden-xs">Select Date/Time Range</h3>
+        <div class="row hidden-xs">
             <div class="col-sm-12">
                 <div class="form-group">
-                    <label>Start datetime</label>
                     <input [(ngModel)]="filterDateStart" ng2-datetime-picker
                            date-format="DD-MM-YYYY hh:mm"
                            hour="23"
                            minute='59'
                            close-on-select="false"
-                           class="form-control" />
+                           class="form-control"
+                           placeholder="Start"
+                           (ngModelChange)="filterResults()" />
                 </div>
             </div>
             <div class="col-sm-12">
                 <div class="form-group">
-                    <label>End datetime</label>
                     <input [(ngModel)]="filterDateEnd" ng2-datetime-picker
                            date-format="DD-MM-YYYY hh:mm"
                            hour="23"
                            minute='59'
                            close-on-select="false"
-                           class="form-control" />
+                           class="form-control"
+                           placeholder="End"
+                           (ngModelChange)="filterResults()" />
                 </div>
             </div>
             <div class="col-sm-12">
                 <div class="form-group">
-                    <button class="btn btn-primary" (click)="filterResults()">Apply filters</button>
                     <button class="btn btn-secondary" (click)="clearFilers()">Clear filters</button>
                 </div>
             </div>
         </div>
-        <p>Max cars count: {{maxCarsCount.carsCount}} </p>
-        <p>In timeframe between <span class="bold">{{maxCarsCount.arrivalTime}}</span> and <span class="bold">{{maxCarsCount.leaveTime}}</span></p>
+        <span *ngIf="maxCarsCount">
+            <p>Max cars count: {{maxCarsCount.carsCount}} </p>
+            <p>In timeframe between <span class="bold">{{maxCarsCount.arrivalTime}}</span> and <span
+                    class="bold">{{maxCarsCount.leaveTime}}</span></p>
+        </span>
     </div>
 </div>
 

@@ -1,4 +1,4 @@
 export class Intersection {
-    constructor(private dateTime: string, private count: Number) {
+    constructor(private arrivalTime: string, private leaveTime: string, public carsCount: Number) {
     }
 }
