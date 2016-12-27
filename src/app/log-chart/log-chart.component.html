@@ -1,0 +1,56 @@
+<div class="row">
+    <form (ngSubmit)="onSubmit(f)" #f="ngForm">
+        <div class="col-sm-8">
+            <div class="form-group">
+                <input type="text" class="form-control" [(ngModel)]="model.apiUrl" name="apiUrl" />
+            </div>
+        </div>
+        <div class="col-sm-2">
+            <div class="form-group">
+                <button class="btn btn-primary form-control">Get data</button>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="row">
+    <div class="col-sm-8">
+        <chart [options]="options"></chart>
+    </div>
+    <div class="col-sm-4 col-xs-12">
+        <h3>Select Date/Time Range</h3>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label>Start datetime</label>
+                    <input [(ngModel)]="dateStart" ng2-datetime-picker
+                           date-format="DD-MM-YYYY hh:mm"
+                           hour="23"
+                           minute='59'
+                           close-on-select="false"
+                           class="form-control"
+                           (ngModelChange)="filterResults()" />
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label>End datetime</label>
+                    <input [(ngModel)]="dateEnd" ng2-datetime-picker
+                           date-format="DD-MM-YYYY hh:mm"
+                           hour="23"
+                           minute='59'
+                           close-on-select="false"
+                           class="form-control"
+                           (ngModelChange)="filterResults()" />
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <button class="btn btn-secondary" (click)="clearFilers()">Clear filters</button>
+                </div>
+            </div>
+        </div>
+        <p>Max cars count: {{maxCarsCount.count}} </p>
+        <p>On {{maxCarsCount.dateTime}}</p>
+    </div>
+</div>
+
