@@ -7,7 +7,7 @@ import {LogItem} from "../log-chart/log-item";
 export class HttpService {
     logItemsChanged = new EventEmitter<LogItem[]>();
     logItems: LogItem[] = [];
-    public apiUrl = 'https://parkingapi.gear.host/v1/parking';
+    public apiUrl = 'https://parkingapi.gear.host/v1/parking?mode=1&items=10';
 
     constructor(private jsonp: Jsonp) {
     }

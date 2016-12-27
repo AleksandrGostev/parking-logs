@@ -1,6 +1,6 @@
 export class LogItem {
-    public arrivalTimeSeconds: Number;
-    public leaveTimeSeconds: Number;
+    public ArrivalTimeUnix: Number;
+    public LeaveTimeUnix: Number;
 
     constructor(private Id: number, public ArrivalTime: string, public LeaveTime: string) {
     }

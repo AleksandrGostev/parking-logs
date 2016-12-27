@@ -23,6 +23,9 @@ import {NgForm} from "@angular/forms";
             height: 40px;
             background: url('../../assets/spin.gif') 0 0 no-repeat;
         }
+        .bold {
+            font-weight: 900;
+        }
     `]
 })
 export class LogChartComponent {
@@ -36,6 +39,7 @@ export class LogChartComponent {
     minLogItem: LogItem;
     maxLogItem: LogItem;
     showSpinner = false;
+    seriesData: any[] = [];
 
 
     constructor(private httpService: HttpService) {
@@ -58,67 +62,68 @@ export class LogChartComponent {
     filterResults() {
         let minLogItem = this.minLogItem;
         let maxLogItem = this.maxLogItem;
-        if (this.filterDateStart !== '') {
-            minLogItem = new LogItem(0, moment.utc(this.filterDateStart.toString()).format(), "");
-        }
-        if (this.filterDateEnd !== '') {
-            maxLogItem = new LogItem(0, "", moment.utc(this.filterDateEnd.toString()).format());
-        }
-        this.processLogs(minLogItem, maxLogItem);
+
+        this.processLogs();
     }
 
     clearFilers() {
-        this.processLogs(this.minLogItem, this.maxLogItem);
+        this.processLogs();
         this.filterDateStart = '';
         this.filterDateEnd = '';
     }
 
     redrawChart(logItems: LogItem[]) {
         this.logItems = logItems;
-        _.forEach(this.logItems, function (item, key) {
-            item.arrivalTimeSeconds = moment(item.ArrivalTime).unix();
-            item.leaveTimeSeconds = moment(item.LeaveTime).unix();
+        console.time("Mapping");
+        _.forEach(this.logItems, function(item: LogItem) {
+            item.ArrivalTimeUnix = moment.utc(item.ArrivalTime).unix();
+            item.LeaveTimeUnix = moment.utc(item.LeaveTime).unix();
         });
-        this.logItems = _.sortBy(this.logItems, 'ArrivalTimeSeconds');
-        this.minLogItem = _.minBy(this.logItems, function (o) {
-            return o.ArrivalTime
+        console.timeEnd("Mapping");
+
+        this.seriesData = _.union(_.map(this.logItems, 'ArrivalTime'), _.map(this.logItems, 'LeaveTime'));
+
+        this.seriesData= _.sortBy(this.seriesData, function(o) {
+            return moment.utc(o).unix();
         });
-        this.maxLogItem = _.maxBy(this.logItems, function (o) {
-            return o.LeaveTime
+        this.seriesData = _.uniqBy(this.seriesData, function(o) {
+            return moment.utc(o).unix();
         });
-        this.processLogs(this.minLogItem, this.maxLogItem);
+        this.processLogs();
     }
 
-    processLogs(minLogItem: LogItem, maxLogItem: LogItem) {
+    filterTest(logItem: LogItem) {
+        return
+    }
+
+    processLogs() {
         this.chartSeries = [];
-        let ms = moment(maxLogItem.LeaveTime).diff(minLogItem.ArrivalTime);
-        let duration = moment.duration(ms);
-        let minutes = duration.asMinutes();
-        let totalIntersections = [];
-        for (let i = 0; i <= minutes; i++) {
-            let compareToTimeStart = moment(minLogItem.ArrivalTime).add(i, "minutes").unix();
-            totalIntersections[i] = {
-                count: 0,
-                dateTime: compareToTimeStart
-            };
-            _.forEach(this.logItems, function (item, key) {
-                if (item.arrivalTimeSeconds <= compareToTimeStart && item.leaveTimeSeconds >= compareToTimeStart) {
-                    totalIntersections[i].count = totalIntersections[i].count + 1;
-                }
+        let intersection: any[] = [];
+        console.time("ProcessingData");
+
+        for (let i = 0; i < this.seriesData.length-1; i++) {
+            var arrivalTime = this.seriesData[i];
+            var leaveTime = this.seriesData[i+1];
+            var arrivalTimeUnix = moment.utc(arrivalTime).unix();
+            var leaveTimeUnix = moment.utc(leaveTime).unix();
+            let carsCount = _.filter(this.logItems, function(o: LogItem) {
+                return o.ArrivalTimeUnix <= arrivalTimeUnix && o.LeaveTimeUnix >= leaveTimeUnix;
+            }).length;
+            this.chartSeries.push(
+                [moment.utc(arrivalTime).unix() * 1000, carsCount]);
+            intersection.push({
+                arrivalTime: arrivalTime,
+                leaveTime: leaveTime,
+                carsCount: carsCount
             });
-            if (totalIntersections[i].count > 0 && (i >= 1 && totalIntersections[i].count != totalIntersections[i - 1].count)) {
-                this.chartSeries.push([compareToTimeStart * 1000, totalIntersections[i].count]);
-            }
         }
 
-        let maxValue = _.maxBy(totalIntersections, function (o) {
-            return o["count"];
+        this.maxCarsCount = _.maxBy(intersection, function (o) {
+            return o["carsCount"];
         });
-        if (maxValue === undefined) {
-            this.maxCarsCount = new Intersection('', 0);
-        } else {
-            this.maxCarsCount = new Intersection(moment.utc(maxValue['dateTime'] * 1000).format('DD/MM/YYYY HH:mm'), maxValue['count']);
-        }
+
+        console.timeEnd("ProcessingData");
+
         this.setChartOptions();
     }
 
@@ -142,7 +147,7 @@ export class LogChartComponent {
             series: [
                 {name: 'history log', data: this.chartSeries}
             ]
-        }
+        };
         this.showSpinner = false;
     }
 }
