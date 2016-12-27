@@ -1,5 +1,11 @@
-# Parking
+## Angular2
 
-To rune this project locally:
-1. npm install
-2. ng serve
+Install angular-cli globally: npm install -g angular-cli
+
+## Install npm dependencies
+
+npm install
+
+## Run dev server
+
+ng serve
