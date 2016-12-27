@@ -10,6 +10,9 @@
                 <button class="btn btn-primary form-control">Get data</button>
             </div>
         </div>
+        <div class="col-sm-1">
+            <div class="loading" [ngClass]="{'hide': !showSpinner}"></div>
+        </div>
     </form>
 </div>
 <div class="row">
@@ -22,29 +25,28 @@
             <div class="col-sm-12">
                 <div class="form-group">
                     <label>Start datetime</label>
-                    <input [(ngModel)]="dateStart" ng2-datetime-picker
+                    <input [(ngModel)]="filterDateStart" ng2-datetime-picker
                            date-format="DD-MM-YYYY hh:mm"
                            hour="23"
                            minute='59'
                            close-on-select="false"
-                           class="form-control"
-                           (ngModelChange)="filterResults()" />
+                           class="form-control" />
                 </div>
             </div>
             <div class="col-sm-12">
                 <div class="form-group">
                     <label>End datetime</label>
-                    <input [(ngModel)]="dateEnd" ng2-datetime-picker
+                    <input [(ngModel)]="filterDateEnd" ng2-datetime-picker
                            date-format="DD-MM-YYYY hh:mm"
                            hour="23"
                            minute='59'
                            close-on-select="false"
-                           class="form-control"
-                           (ngModelChange)="filterResults()" />
+                           class="form-control" />
                 </div>
             </div>
             <div class="col-sm-12">
                 <div class="form-group">
+                    <button class="btn btn-primary" (click)="filterResults()">Apply filters</button>
                     <button class="btn btn-secondary" (click)="clearFilers()">Clear filters</button>
                 </div>
             </div>

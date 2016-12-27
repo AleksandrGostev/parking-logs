@@ -4,7 +4,6 @@ import * as moment from 'moment';
 import {LogItem} from "./log-item";
 import * as _ from "lodash";
 import {Intersection} from "./intersection";
-import {Input} from "@angular/core/src/metadata/directives";
 import {NgForm} from "@angular/forms";
 
 @Component({
@@ -18,18 +17,25 @@ import {NgForm} from "@angular/forms";
         chart {
             display: block;
         }
+        
+        .loading {
+            width: 40px;
+            height: 40px;
+            background: url('../../assets/spin.gif') 0 0 no-repeat;
+        }
     `]
 })
 export class LogChartComponent {
     logItems: LogItem[] = [];
     options: Object;
-    chartData: any[] = [];
+    chartSeries: any[] = [];
     maxCarsCount: Intersection = new Intersection('', 0);
     model: Object;
-    dateStart: any = "";
-    dateEnd: any = "";
+    filterDateStart: any = "";
+    filterDateEnd: any = "";
     minLogItem: LogItem;
     maxLogItem: LogItem;
+    showSpinner = false;
 
 
     constructor(private httpService: HttpService) {
@@ -42,28 +48,29 @@ export class LogChartComponent {
     }
 
     onSubmit(form: NgForm) {
+        this.showSpinner = true;
         this.httpService.apiUrl = form.value.apiUrl;
         this.httpService.getLogs();
-        this.dateStart = '';
-        this.dateEnd = '';
+        this.filterDateStart = '';
+        this.filterDateEnd = '';
     }
 
     filterResults() {
         let minLogItem = this.minLogItem;
         let maxLogItem = this.maxLogItem;
-        if (this.dateStart !== '') {
-            minLogItem = new LogItem(0, moment.utc(this.dateStart.toString()).format(), "");
+        if (this.filterDateStart !== '') {
+            minLogItem = new LogItem(0, moment.utc(this.filterDateStart.toString()).format(), "");
         }
-        if (this.dateEnd !== '') {
-            maxLogItem = new LogItem(0, "", moment.utc(this.dateEnd.toString()).format());
+        if (this.filterDateEnd !== '') {
+            maxLogItem = new LogItem(0, "", moment.utc(this.filterDateEnd.toString()).format());
         }
         this.processLogs(minLogItem, maxLogItem);
     }
 
     clearFilers() {
         this.processLogs(this.minLogItem, this.maxLogItem);
-        this.dateStart = '';
-        this.dateEnd = '';
+        this.filterDateStart = '';
+        this.filterDateEnd = '';
     }
 
     redrawChart(logItems: LogItem[]) {
@@ -83,26 +90,24 @@ export class LogChartComponent {
     }
 
     processLogs(minLogItem: LogItem, maxLogItem: LogItem) {
-        this.chartData = [];
-        var ms = moment(maxLogItem.LeaveTime).diff(minLogItem.ArrivalTime);
-        var duration = moment.duration(ms);
-        var minutes = duration.asMinutes();
-        var totalIntersections = [];
-        for (var i = 0; i <= minutes; i++) {
+        this.chartSeries = [];
+        let ms = moment(maxLogItem.LeaveTime).diff(minLogItem.ArrivalTime);
+        let duration = moment.duration(ms);
+        let minutes = duration.asMinutes();
+        let totalIntersections = [];
+        for (let i = 0; i <= minutes; i++) {
             let compareToTimeStart = moment(minLogItem.ArrivalTime).add(i, "minutes").unix();
             totalIntersections[i] = {
                 count: 0,
-                items: [],
                 dateTime: compareToTimeStart
             };
             _.forEach(this.logItems, function (item, key) {
                 if (item.arrivalTimeSeconds <= compareToTimeStart && item.leaveTimeSeconds >= compareToTimeStart) {
-                    totalIntersections[i].items.push(item);
                     totalIntersections[i].count = totalIntersections[i].count + 1;
                 }
             });
-            if (totalIntersections[i].items.length > 0) {
-                this.chartData.push([compareToTimeStart * 1000, totalIntersections[i].items.length]);
+            if (totalIntersections[i].count > 0 && (i >= 1 && totalIntersections[i].count != totalIntersections[i - 1].count)) {
+                this.chartSeries.push([compareToTimeStart * 1000, totalIntersections[i].count]);
             }
         }
 
@@ -119,7 +124,6 @@ export class LogChartComponent {
 
     setChartOptions() {
         this.options = {
-            width: 250,
             type: 'linear',
             chart: {zoomType: 'x'},
             xAxis: [{
@@ -136,27 +140,9 @@ export class LogChartComponent {
             }],
             title: {text: 'Parking history'},
             series: [
-                {name: 'history log', data: this.chartData}
-            ],
-            responsive: {
-                rules: [{
-                    condition: {
-                        maxWidth: 500
-                    },
-                    chartOptions: {
-                        yAxis: {
-                            labels: {
-                                align: 'left',
-                                x: 0,
-                                y: -2
-                            },
-                            title: {
-                                text: ''
-                            }
-                        }
-                    }
-                }]
-            }
+                {name: 'history log', data: this.chartSeries}
+            ]
         }
+        this.showSpinner = false;
     }
 }
